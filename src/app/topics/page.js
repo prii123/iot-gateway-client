@@ -1,74 +1,68 @@
-  
 "use client";
 
-import { Navbar } from '@/src/components/Navbar';
-import { useState, useEffect } from 'react';
-import io from 'socket.io-client';
+import { Navbar } from "@/src/components/Navbar";
+import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import { RadioReceiver } from "lucide-react"; // 📡 Icono de sensor
 
-const socket = io('http://localhost:3001'); // URL del backend NestJS
 
-export default function TopicList() {
-  const [topics, setTopics] = useState([]); // Especifica el tipo de datos
-  const [subscriberCounts, setSubscriberCounts] = useState({}); // Almacena el número de suscriptores por tópico
+const SOCKET_URL = "http://localhost:3003"; // Ajusta con la URL de tu backend NestJS
 
-  // Obtener la lista de tópicos al cargar el componente
+export default function Home() {
+  const [messages, setMessages] = useState({});
+
   useEffect(() => {
-    const fetchTopics = async () => {
-      try {
-        const res = await fetch('http://localhost:3001/mqtt/topics');
-        const data = await res.json();
-        setTopics(data.topics || []); // Asegúrate de que data.topics sea un array
-      } catch (error) {
-        console.error('Error fetching topics:', error);
-      }
-    };
+    const socket = io(SOCKET_URL);
 
-    fetchTopics();
-  }, []);
-
-  // Escuchar el número de suscriptores
-  useEffect(() => {
-    // Escuchar el estado inicial de los suscriptores
-    socket.on('initial_subscriber_counts', (initialCounts) => {
-      setSubscriberCounts(initialCounts);
+    socket.on("connect", () => {
+      console.log("🔗 Conectado al servidor WebSocket");
     });
 
-    // Escuchar actualizaciones en tiempo real
-    socket.on('subscriber_count', ({ topic, count }) => {
-      setSubscriberCounts((prev) => ({
+    socket.on("mqtt_message", (data) => {
+      // console.log("📩 Nuevo mensaje recibido:", data);
+      setMessages((prev) => ({
         ...prev,
-        [topic]: count,
+        [data.topic]: { 
+          message: data.lastMessage, 
+          updatedAt: data.updatedAt  // ✅ Guardar updatedAt
+        }, // Sobrescribe el mensaje del topic en lugar de crear una nueva fila
       }));
     });
 
-    // Limpiar listeners al desmontar el componente
     return () => {
-      socket.off('initial_subscriber_counts');
-      socket.off('subscriber_count');
+      socket.disconnect();
     };
   }, []);
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white flex flex-col items-center">
-      <Navbar />
+    <Navbar />
 
-      <div className="w-full max-w-md bg-gray-900 p-4 rounded-lg shadow-lg mb-6">
-        <div className="w-full max-w-md bg-gray-800 p-4 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-2">📋 Topics Suscritos</h2>
-          {topics.length === 0 ? (
-            <p className="text-gray-400">No hay topics suscritos.</p>
-          ) : (
-            topics.map((topic, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <p className="text-white">📌 {topic}</p>
-                <p className="text-gray-400">
-                  {subscriberCounts[topic] || 0} suscriptores
-                </p>
+    <div className="w-full bg-gray-900 p-6 rounded-lg shadow-lg text-center">
+      <h1 className="text-3xl font-semibold mb-6 flex items-center justify-center gap-2">
+        <RadioReceiver size={28} className="text-blue-400" /> 📡 MQTT en Tiempo Real
+      </h1>
+
+      <div className="w-full max-w-6xl">
+        <h2 className="text-xl font-semibold mb-4">📨 Mensajes Recibidos</h2>
+
+        {Object.keys(messages).length === 0 ? (
+          <p className="text-gray-400 text-center">No hay mensajes recibidos.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center">
+            {Object.entries(messages).map(([topic, data]) => (
+              <div key={topic} className="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700 text-center">
+                <p className="text-sm text-gray-400">📌 <b>{topic}</b></p>
+                <p className="text-white text-lg font-medium">{data.message}</p>
+                <p className="text-gray-500 text-xs mt-2">🕒 {new Date(data.updatedAt).toLocaleString()}</p>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
+  </div>
   );
 }
+
+
