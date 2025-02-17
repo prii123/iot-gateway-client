@@ -6,7 +6,7 @@ import { io } from "socket.io-client";
 import { RadioReceiver } from "lucide-react"; // 📡 Icono de sensor
 
 
-const SOCKET_URL = "http://localhost:3003"; // Ajusta con la URL de tu backend NestJS
+const SOCKET_URL = "http://localhost:3002"; // Ajusta con la URL de tu backend NestJS
 
 export default function Home() {
   const [messages, setMessages] = useState({});
@@ -43,6 +43,7 @@ export default function Home() {
         <RadioReceiver size={28} className="text-blue-400" /> 📡 MQTT en Tiempo Real
       </h1>
 
+      <div className="text-3xl font-semibold mb-6 flex items-center justify-center gap-2">
       <div className="w-full max-w-6xl">
         <h2 className="text-xl font-semibold mb-4">📨 Mensajes Recibidos</h2>
 
@@ -60,6 +61,9 @@ export default function Home() {
           </div>
         )}
       </div>
+      </div>
+
+      
     </div>
   </div>
   );
