@@ -13,6 +13,7 @@ export function Navbar() {
     <Link href="/suscripciones" className="text-white hover:text-gray-400">🔗 Suscripciones</Link>
     <Link href="/publicaciones" className="text-white hover:text-gray-400">✉️ Publicaciones</Link>
     <Link href="/topics" className="text-white hover:text-gray-400"> Topics</Link>
+    <Link href="/config" className="text-white hover:text-gray-400"> Configuracion</Link>
   </nav>
   );
 } 
